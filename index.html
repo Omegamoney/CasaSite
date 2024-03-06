@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Cornometro</title>
+</head>
+
+<body>
+    <audio id="workAudio" src="beneath.mp3" loop></audio>
+    <audio id="homeAudio" src="specialist.mp3" loop></audio>
+    <div class="button-container">
+        <input type="checkbox" id="mute-toggle" class="mute-toggle">
+        <label for="mute-toggle" class="mute-icon"></label>
+    </div>
+    <div class="container">
+        <img src="guradance.gif" alt="Work in progress" id="status-gif">
+        <div id="countdown">
+            <div class="time-block" id="hours"></div>
+            <div class="time-block" id="minutes"></div>
+            <div class="time-block" id="seconds"></div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+
+</html>
