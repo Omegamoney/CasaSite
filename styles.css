@@ -1,0 +1,101 @@
+/* styles.css */
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    padding: 5%;
+    background-color: #333444;
+    color: #ffffff;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    box-sizing: border-box;
+    overflow: hidden; /* Prevent scrolling */
+    overflow-y: auto; /* Allow vertical scrolling */
+}
+
+h1 {
+    font-size: 2.5em;
+    margin-bottom: 20px;
+}
+
+#timer {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 20px 0;
+}
+
+.timer-box {
+    width: 85px;
+    height: 85px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: #444555;
+    border-radius: 10px;
+    font-size: 1.7em;
+}
+
+.timer-box span {
+    font-size: 0.5em;
+    margin-top: 5px;
+    text-transform: uppercase;
+}
+
+#gif {
+    margin-top: 10px;
+}
+
+#gif img {
+    display: block;
+    margin: 0 auto;
+    width: 350px; /* Fixed width for both GIFs */
+    height: 350px; /* Fixed height for both GIFs */
+    object-fit: cover; /* Ensures the GIFs are resized proportionally */
+}
+
+.timer-box-extra {
+    background-color: #555666;
+    color: #ffffff;
+    border: 2px solid #666777;
+}
+
+/* Timezone selector in the top-right corner */
+#timezone-selector {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #444555;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+#timezone-dropdown {
+    background-color: #555666;
+    color: #ffffff;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    font-size: 1rem;
+}
+
+/* NEW: Progress Bar Styles */
+#progress-container {
+    width: 50%;
+    background-color: #444;
+    border-radius: 5px;
+    overflow: hidden;
+    margin: 20px auto;
+    height: 20px;
+}
+
+#progress-bar {
+    height: 100%;
+    width: 0%;
+    background-color: #76c7c0;
+    transition: width 0.5s ease-in-out;
+}

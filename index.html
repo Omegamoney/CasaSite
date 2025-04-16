@@ -1,29 +1,36 @@
+<!-- index.html -->
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
-    <title>Cornometro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Contador</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Contador">
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+    <!-- Include Luxon from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3/build/global/luxon.min.js"></script>
 </head>
-
 <body>
-    <audio id="workAudio" src="beneath.mp3" loop></audio>
-    <audio id="homeAudio" src="specialist.mp3" loop></audio>
-    <div class="button-container">
-        <input type="checkbox" id="mute-toggle" class="mute-toggle">
-        <label for="mute-toggle" class="mute-icon"></label>
+    <!-- Timezone Selector -->
+    <div id="timezone-selector">
+        <select id="timezone-dropdown"></select>
     </div>
-    <div class="container">
-        <img src="guradance.gif" alt="Work in progress" id="status-gif">
-        <div id="countdown">
-            <div class="time-block" id="hours"></div>
-            <div class="time-block" id="minutes"></div>
-            <div class="time-block" id="seconds"></div>
-        </div>
+
+    <h1>Tempo Restante</h1>
+    <div id="timer">Calma ae...</div>
+    
+    <!-- NEW: Progress Bar -->
+    <div id="progress-container">
+        <div id="progress-bar"></div>
+    </div>
+    
+    <div id="gif">
+        <img id="gif-img" src="daytime.gif" alt="Daytime gif">
     </div>
     <script src="script.js"></script>
 </body>
-
 </html>

@@ -1,116 +1,195 @@
-const hoursElement = document.getElementById('hours');
-const minutesElement = document.getElementById('minutes');
-const secondsElement = document.getElementById('seconds');
-const statusGif = document.getElementById('status-gif');
-const workAudio = document.getElementById('workAudio');
-const homeAudio = document.getElementById('homeAudio');
-const muteButton = document.getElementById('mute-toggle');
-// Set the volume to 20%
-workAudio.volume = 0.2;
-homeAudio.volume = 0.2;
-let isMuted = false;
+// script.js
+const DateTime = luxon.DateTime;
+let currentGif = "";
+let selectedTimeZone = "browser";
 
-const homeTimeHours = {
-    'monday': 18,
-    'tuesday': 18,
-    'wednesday': 18,
-    'thursday': 18,
-    'friday': 17
-};
-
-const startWorkHour = 8; // Work starts at 08:00
-
-muteButton.addEventListener('click', () => {
-    isMuted = !isMuted;
-    muteButton.textContent = isMuted ? 'Unmute' : 'Mute';
-    updateAudio();
+// Load saved timezone preference, if any
+document.addEventListener('DOMContentLoaded', () => {
+    const savedTimezone = localStorage.getItem('timezone');
+    if (savedTimezone) {
+        selectedTimeZone = savedTimezone;
+        const timezoneDropdown = document.getElementById('timezone-dropdown');
+        timezoneDropdown.value = savedTimezone;
+    }
 });
-function updateAudio() {
-    if (isMuted) {
-        workAudio.pause();
-        homeAudio.pause();
+
+// Populate timezone dropdown automatically using Intl.supportedValuesOf if available
+function populateTimezones() {
+    const timezoneDropdown = document.getElementById('timezone-dropdown');
+    timezoneDropdown.innerHTML = '';
+
+    // Add the Browser Default option
+    const defaultOption = document.createElement('option');
+    defaultOption.value = "browser";
+    defaultOption.textContent = "Padrão do Navegador";
+    timezoneDropdown.appendChild(defaultOption);
+
+    let timezones = [];
+    if (Intl.supportedValuesOf) {
+        timezones = Intl.supportedValuesOf('timeZone');
     } else {
-        playCurrentStateAudio();
+        // Fallback list if not supported
+        timezones = [
+            "America/New_York",
+            "Europe/London",
+            "Asia/Tokyo",
+            "Australia/Sydney"
+        ];
     }
-}
-function playCurrentStateAudio() {
-    if (isMuted) {
-        return;
-    }
-    const now = new Date();
-    const currentHour = now.getHours();
-    const today = now.getDay();
-    const dayOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][today];
-    const endWorkHour = homeTimeHours[dayOfWeek] || 18; // Default to 18 if not specified
 
-    if (today === 0 || today === 6) { // If it's weekend, play home audio
-        workAudio.pause();
-        if (!homeAudio.playing) {
-            homeAudio.play();
-        }
-    } else if (currentHour >= startWorkHour && currentHour < endWorkHour) {
-        homeAudio.pause();
-        if (!workAudio.playing) {
-            workAudio.play();
-        }
+    // Sort timezones alphabetically
+    timezones.sort();
+
+    timezones.forEach(tz => {
+        const option = document.createElement('option');
+        option.value = tz;
+        option.textContent = tz;
+        timezoneDropdown.appendChild(option);
+    });
+
+    timezoneDropdown.addEventListener('change', (e) => {
+        selectedTimeZone = e.target.value;
+        // Save the selected timezone locally
+        localStorage.setItem('timezone', selectedTimeZone);
+    });
+}
+
+// Get current time as a Luxon DateTime, in the chosen timezone (or local if "browser")
+function getCurrentTime() {
+    if (selectedTimeZone === "browser") {
+        return DateTime.now();
     } else {
-        workAudio.pause();
-        if (!homeAudio.playing) {
-            homeAudio.play();
+        return DateTime.now().setZone(selectedTimeZone);
+    }
+}
+
+function updateCountdown() {
+    const now = getCurrentTime();
+    let targetTime;
+    let afterHours = false;
+    let displayDays = false;
+
+    // Luxon weekday: 1 = Monday, ..., 7 = Sunday
+    if (now.weekday >= 1 && now.weekday <= 4) { // Monday to Thursday
+        targetTime = now.set({ hour: 18, minute: 0, second: 0, millisecond: 0 });
+    } else if (now.weekday === 5) { // Friday
+        targetTime = now.set({ hour: 17, minute: 0, second: 0, millisecond: 0 });
+    } else { // Saturday and Sunday
+        targetTime = now.plus({ days: (8 - now.weekday) }).set({ hour: 8, minute: 0, second: 0, millisecond: 0 });
+    }
+
+    if (now > targetTime) { // After hours
+        afterHours = true;
+        if (now.weekday === 5 || now.weekday === 6) {
+            targetTime = now.plus({ days: (8 - now.weekday) }).set({ hour: 8, minute: 0, second: 0, millisecond: 0 });
+            displayDays = true;
+        } else {
+            targetTime = now.plus({ days: 1 }).set({ hour: 8, minute: 0, second: 0, millisecond: 0 });
         }
     }
+
+    const diffMillis = targetTime.toMillis() - now.toMillis();
+    const hours = Math.floor(diffMillis / (1000 * 60 * 60));
+    const minutes = Math.floor((diffMillis % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diffMillis % (1000 * 60)) / 1000);
+    let days = 0;
+
+    if (displayDays) {
+        days = Math.floor(diffMillis / (1000 * 60 * 60 * 24));
+    }
+
+    const timerElement = document.getElementById('timer');
+    timerElement.innerHTML = `
+        <div class="timer-box">
+            ${hours}
+            <span>Horas</span>
+        </div>
+        <div class="timer-box">
+            ${minutes}
+            <span>Minutos</span>
+        </div>
+        <div class="timer-box">
+            ${seconds}
+            <span>Segundos</span>
+        </div>
+        ${displayDays ? `<div class="timer-box timer-box-extra">${days}<span>Dias</span></div>` : ""}
+    `;
+
+    const header = document.querySelector('h1');
+    header.textContent = afterHours ? "Tempo de Descanso" : "Tempo Restante";
+
+    const gif = document.getElementById('gif-img');
+    if (!afterHours && currentGif !== "daytime.gif") {
+        gif.src = "daytime.gif";
+        gif.alt = "Daytime gif";
+        currentGif = "daytime.gif";
+    } else if (afterHours && currentGif !== "afterhours.gif") {
+        gif.src = "afterhours.gif";
+        gif.alt = "After hours gif";
+        currentGif = "afterhours.gif";
+    }
+
+    updateProgressBar(); // Update the progress bar based on current time
 }
 
-function calculateTimeUntilHome() {
-    const now = new Date();
-    const today = now.getDay(); // 0 for Sunday, 1 for Monday, etc.
-    const dayOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][today];
-
-    // If it's the weekend, don't do anything
-    if (today === 0 || today === 6) return;
-
-    let currentHour = now.getHours();
-    let targetHour = homeTimeHours[dayOfWeek] || 0;
-    let startHour = startWorkHour;
-    let targetMinute = 0;
-    let targetSecond = 0;
-
-    // Check if it's past start time and before end time, show guradance.gif and play beneath the mask
-    if (currentHour >= startHour && currentHour < targetHour && statusGif.src !== 'https://casa.stellaraeon.app/guradance.gif') {
-        statusGif.src = 'guradance.gif';
+// Update the progress bar based on the working day's progress
+function updateProgressBar() {
+    const now = getCurrentTime();
+    const progressBar = document.getElementById('progress-bar');
+    
+    // Only calculate progress for weekdays (Monday-Friday)
+    if (now.weekday >= 1 && now.weekday <= 5) {
+        const workStart = now.set({ hour: 8, minute: 0, second: 0, millisecond: 0 });
+        let workEnd;
+        if (now.weekday === 5) {
+            workEnd = now.set({ hour: 17, minute: 0, second: 0, millisecond: 0 });
+        } else {
+            workEnd = now.set({ hour: 18, minute: 0, second: 0, millisecond: 0 });
+        }
+        let progress;
+        if (now < workStart) {
+            progress = 0;
+        } else if (now > workEnd) {
+            progress = 100;
+        } else {
+            progress = ((now.toMillis() - workStart.toMillis()) / (workEnd.toMillis() - workStart.toMillis())) * 100;
+        }
+        progressBar.style.width = `${progress}%`;
+    } else {
+        // For weekends, set the bar to full (or you could hide it)
+        progressBar.style.width = "100%";
     }
-
-    // Check if it's time to go home and show toothless.gif and play the song specialist
-    if (currentHour >= targetHour && now.getMinutes() >= targetMinute && statusGif.src !== 'https://casa.stellaraeon.app/toothless.gif') {
-        statusGif.src = 'toothless.gif';
-        secondsUntilHome = 0
-        updateAudio();
-        return;
-    }
-
-    // Calculate remaining time until home
-    let secondsUntilHome = (targetHour - currentHour) * 3600 +
-        (targetMinute - now.getMinutes()) * 60 +
-        (targetSecond - now.getSeconds());
-
-    // If it's before start time, calculate remaining time until work starts
-    if (currentHour < startHour) {
-        secondsUntilHome = (startHour - currentHour) * 3600 -
-            now.getMinutes() * 60 -
-            now.getSeconds();
-    }
-
-    let hours = Math.floor(secondsUntilHome / 3600);
-    let minutes = Math.floor((secondsUntilHome % 3600) / 60);
-    let seconds = secondsUntilHome % 60;
-
-    // Display the time
-    hoursElement.textContent = hours.toString().padStart(2, '0');
-    minutesElement.textContent = minutes.toString().padStart(2, '0');
-    secondsElement.textContent = seconds.toString().padStart(2, '0');
-    playCurrentStateAudio();
 }
 
-// Call the function initially and update every second
-calculateTimeUntilHome();
-setInterval(calculateTimeUntilHome, 1000);
+populateTimezones();
+setInterval(updateCountdown, 1000);
+
+// PWA Integration
+let deferredPrompt;
+if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+        navigator.serviceWorker.register("/sw.js").then((registration) => {
+            console.log("Service Worker registered with scope:", registration.scope);
+        });
+    });
+}
+window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    const installButton = document.getElementById("installButton");
+    if (installButton) {
+        installButton.style.display = "block";
+        installButton.addEventListener("click", () => {
+            installButton.style.display = "none";
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === "accepted") {
+                    console.log("User accepted the install prompt");
+                } else {
+                    console.log("User dismissed the install prompt");
+                }
+                deferredPrompt = null;
+            });
+        });
+    }
+});
